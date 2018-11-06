@@ -13,16 +13,7 @@ request = pc.makeRequestRSpec()
 
 tourDescription = \
 """
-This profile provides the template for a full research cluster with head node, scheduler, compute nodes, and shared file systems.
-First node (head) should contain: 
-- Shared home directory using Networked File System
-- Management server for SLURM
-Second node (metadata) should contain:
-- Metadata server for SLURM
-Third node (storage):
-- Shared software directory (/software) using Networked File System
-Remaining three nodes (computing):
-- Compute nodes  
+This profile provides the template for a Hadoop cluster with 1 name node and 3 data node.
 """
 
 #
@@ -36,15 +27,11 @@ prefixForIP = "192.168.1."
 
 link = request.LAN("lan")
 
-for i in range(6):
+for i in range(4):
   if i == 0:
-    node = request.XenVM("head")
-    node.routable_control_ip = "true"
-  elif i == 1:
-    node = request.XenVM("metadata")
-  elif i == 2:
-    node = request.XenVM("storage")
+    node = request.RawPC("namenode")
   else:
+<<<<<<< HEAD
     node = request.XenVM("compute-" + str(i-2))
     node.cores = 4
     node.ram = 4096
@@ -52,20 +39,39 @@ for i in range(6):
   node.disk_image = "urn:publicid:IDN+emulab.net+image+emulab-ops:CENTOS7-64-STD"
   
   iface = node.addInterface("if" + str(i))
+=======
+    node = request.RawPC("datanode-" + str(i))
+
+  node.routable_control_ip = "true"
+  node.disk_image = "urn:publicid:IDN+emulab.net+image+emulab-ops:CENTOS7-64-STD"
+  bs = node.Blockstore("bs" + str(i), "/hadoop")
+  bs.size = "50GB"
+    
+  iface = node.addInterface("if" + str(i-3))
+>>>>>>> 364d8a06c6ef958c64046af82c89503df5596725
   iface.component_id = "eth1"
   iface.addAddress(pg.IPv4Address(prefixForIP + str(i + 1), "255.255.255.0"))
   link.addInterface(iface)
   
   node.addService(pg.Execute(shell="sh", command="sudo chmod 755 /local/repository/passwordless.sh"))
   node.addService(pg.Execute(shell="sh", command="sudo /local/repository/passwordless.sh"))
-  node.addService(pg.Execute(shell="sh", command="sudo chmod 755 /local/repository/install_mpi.sh"))
-  node.addService(pg.Execute(shell="sh", command="sudo /local/repository/install_mpi.sh"))
+  node.addService(pg.Execute(shell="sh", command="sudo chmod 755 /local/repository/environment_prep.sh"))
+  node.addService(pg.Execute(shell="sh", command="sudo /local/repository/environment_prep.sh"))
   
+<<<<<<< HEAD
   # This code segment is added per Benjamin Walker's solution to address the StrictHostKeyCheck issue of ssh
   node.addService(pg.Execute(shell="sh", command="sudo chmod 755 /local/repository/ssh_setup.sh"))
   node.addService(pg.Execute(shell="sh", command="sudo -H -u lngo bash -c '/local/repository/ssh_setup.sh'"))
  
   node.addService(pg.Execute(shell="sh", command="sudo su lngo -c 'cp /local/repository/source/* /users/lngo'"))
+=======
+  if i == 0:
+    node.addService(pg.Execute(shell="sh", command="sudo yum install -y ambari-server"))
+>>>>>>> 364d8a06c6ef958c64046af82c89503df5596725
   
+  node.addService(pg.Execute(shell="sh", command="sudo yum install -y ambari-agent"))
+  node.addService(pg.Execute(shell="sh", command="sudo sed -i 's/localhost/192.168.1.1/g' /etc/ambari-agent/conf/ambari-agent.ini"))
+  node.addService(pg.Execute(shell="sh", command="sudo ambari-agent start"))
+    
 # Print the RSpec to the enclosing page.
 pc.printRequestRSpec(request)
