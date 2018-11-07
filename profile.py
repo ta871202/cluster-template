@@ -35,7 +35,7 @@ prefixForIP = "192.168.1."
 
 link = request.LAN("lan")
 
-for i in range(workerCount + 1):
+for i in range(params.workerCount + 1):
   if i == 0:
     node = request.RawPC("namenode")
   else:
