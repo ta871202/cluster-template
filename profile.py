@@ -10,10 +10,18 @@ pc = portal.Context()
 # Create a Request object to start building the RSpec.
 request = pc.makeRequestRSpec()
 
+pc.defineParameter("workerCount", "Number of DataNodes",
+                   portal.ParameterType.INTEGER, 4)
+
+#
+# Get any input parameter values that will override our defaults.
+#
+params = pc.bindParameters()
+pc.verifyParameters()
 
 tourDescription = \
 """
-This profile provides the template for a Hadoop cluster with 1 name node and 3 data node.
+This profile provides the template for a Hadoop cluster with 1 name node and customizable number of data nodes.
 """
 
 #
@@ -27,7 +35,7 @@ prefixForIP = "192.168.1."
 
 link = request.LAN("lan")
 
-for i in range(4):
+for i in range(workerCount + 1):
   if i == 0:
     node = request.RawPC("namenode")
   else:
@@ -47,9 +55,12 @@ for i in range(4):
   node.addService(pg.Execute(shell="sh", command="sudo /local/repository/passwordless.sh"))
   node.addService(pg.Execute(shell="sh", command="sudo chmod 755 /local/repository/environment_prep.sh"))
   node.addService(pg.Execute(shell="sh", command="sudo /local/repository/environment_prep.sh"))
+  
   if i == 0:
     node.addService(pg.Execute(shell="sh", command="sudo yum install -y ambari-server"))
-  
+    node.addService(pg.Execute(shell="sh", command="sudo ambari-server setup -s"))
+    node.addService(pg.Execute(shell="sh", command="sudo ambari-server start"))
+    
   node.addService(pg.Execute(shell="sh", command="sudo yum install -y ambari-agent"))
   node.addService(pg.Execute(shell="sh", command="sudo sed -i 's/localhost/192.168.1.1/g' /etc/ambari-agent/conf/ambari-agent.ini"))
   node.addService(pg.Execute(shell="sh", command="sudo ambari-agent start"))
