@@ -59,6 +59,8 @@ for i in range(params.workerCount + 1):
   if i == 0:
     node.addService(pg.Execute(shell="sh", command="sudo yum install -y ambari-server"))
     node.addService(pg.Execute(shell="sh", command="sudo ambari-server setup -s"))
+    node.addService(pg.Execute(shell="sh", command="sudo yum -y install mysql-connector-java*"))
+    node.addService(pg.Execute(shell="sh", command="sudo ln -s /usr/share/java/mysql-connector-java.jar /var/lib/ambari-server/resources/mysql-connector-java.jar"))
     node.addService(pg.Execute(shell="sh", command="sudo ambari-server start"))
     
   node.addService(pg.Execute(shell="sh", command="sudo yum install -y ambari-agent"))
